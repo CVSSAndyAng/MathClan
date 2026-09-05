@@ -1,50 +1,23 @@
-# MathClans: Battle for Lion City — Version 1 Prototype
+# MathClans — Battle for Lion City (Test V1.1)
 
-A browser-only prototype of the mathematics RPG / clan strategy game.
+This test build focuses on the visual direction and attack flow.
 
-## What is included
+## Main changes in V1.1
+- Fantasy parchment/illustrated-map UI instead of the flat dark map.
+- More detailed Singapore realm with terrain regions, mountains, forests, landmarks and clan HQ nodes.
+- Rival HQ nodes are clickable directly on the map.
+- Clan attack now includes a 6-second simulated troop march across the map before the mental-sum clash begins.
+- Marching party size matches the 3–10 clan members selected for war.
+- Live march HUD shows rival, destination, troop count and countdown.
+- Existing worked-solution MCQ training and Clan Clash mechanics are retained.
 
-- Stylised 2D Singapore strategy map
-- Clan HQ identity and rival clans
-- 10-member example clan roster
-- Selection of 3–10 available players for war
-- Four mathematical skills:
-  - Algebra = attack
-  - Geometry = defence
-  - Trigonometry = precision / speed amplification
-  - Statistics = tactical / critical effects
-- Mathematical training using 4-option worked-solution MCQs
-- Procedural question generation with several misconception patterns
-- Training topics covering the initial requested Algebra, Geometry, Trigonometry and Statistics scope
-- 90-second mental-sum Clan Clash
-- Team mathematical stats modify combat without replacing speed/accuracy
-- Clan rating rises or falls after battle; permanent mathematical mastery does not fall on defeat
-- LocalStorage persistence in the browser
-- Responsive desktop/mobile layout
+## Test locally
+Open `index.html` in a browser.
 
-## Run locally
-
-Open `index.html` in a modern browser.
-
-For best browser behaviour, serve it with a simple local/static web server rather than opening with `file://`.
-
-## GitHub Pages
-
-Upload the four files in this folder to a GitHub repository and enable GitHub Pages from the repository settings. No build process is required.
-
-## Important V1 limitation
-
-This is a gameplay prototype. Clan opponents are simulated in the browser. Real accounts, databases, real-time multiplayer matchmaking, server-authoritative battles and anti-cheat are deliberately not included yet.
-
-## Suggested Version 2
-
-1. Firebase/Supabase authentication and persistent player/clan database
-2. Real online presence and war rally invitations
-3. Server-based matchmaking for equal troop counts
-4. WebSocket/Realtime synchronized mental-sum clash
-5. Expanded non-repetition question DNA engine
-6. Visual chart/diagram generators for Statistics and Geometry
-7. Clan territory/influence and HQ districts on the Singapore map
-8. Cosmetics, avatar builder, guardian evolution and seasons
-9. Teacher/admin controls for syllabus and difficulty
-10. Anti-cheat, battle logs and moderation
+## Recommended test sequence
+1. Open Clan Hall.
+2. Select 3–10 online members.
+3. Click **Choose Target & March**.
+4. Choose a rival.
+5. Watch the troops move across the map.
+6. The 90-second mental-sum Clan Clash starts automatically after arrival.

@@ -18,6 +18,9 @@ const rivals=[
  {name:'Panda Prime',crest:'🐼',region:'Punggol',rating:1602,skills:{algebra:64,geometry:86,trigonometry:43,statistics:68}},
  {name:'Data Drakes',crest:'🐲',region:'Bedok',rating:1513,skills:{algebra:70,geometry:51,trigonometry:60,statistics:79}}
 ];
+const RIVAL_COORDS=[{x:810,y:304,region:'Tampines'},{x:176,y:304,region:'Jurong'},{x:708,y:197,region:'Punggol'},{x:632,y:342,region:'Bedok'}];
+const HOME_COORD={x:506,y:263};
+let marching=false;
 const members=[
  {name:'Ari',avatar:'🐲',role:'algebra',online:1,skills:{algebra:78,geometry:42,trigonometry:58,statistics:51}},
  {name:'Mei',avatar:'🐰',role:'trigonometry',online:1,skills:{algebra:49,geometry:55,trigonometry:84,statistics:57}},
@@ -39,8 +42,9 @@ function init(){
  renderRivals();renderSkills();renderMembers();renderTeamBars();renderRanking();wire();
 }
 function wire(){
- $$('.bottom-nav button').forEach(b=>b.onclick=()=>goScreen(b.dataset.screen));
+ $$('.bottom-nav button').forEach(b=>b.onclick=()=>{if(!marching)goScreen(b.dataset.screen)});
  $$('[data-go]').forEach(b=>b.onclick=()=>goScreen(b.dataset.go));
+ $$('.rival-hq').forEach(n=>n.onclick=()=>openRival(+n.dataset.rival));
  $('#nextQuestionBtn').onclick=()=>newQuestion(activeSkill);
  $('#findBattleBtn').onclick=()=>openBattlePicker();
  $('#mentalForm').onsubmit=e=>{e.preventDefault();submitMental()};
@@ -49,7 +53,7 @@ function wire(){
 function goScreen(name){$$('.screen').forEach(s=>s.classList.remove('active'));$('#screen-'+name).classList.add('active');$$('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));if(name==='battle'&&!battle) openBattlePicker()}
 function renderRivals(){
  $('#rivalList').innerHTML=rivals.map((r,i)=>`<div class="rival-item" data-i="${i}"><div class="rival-crest">${r.crest}</div><div><strong>${r.name}</strong><small>${r.region} · ${Math.abs(r.rating-state.clan.rating)} rating gap</small></div><div class="rating-pill">${r.rating}</div></div>`).join('');
- $$('.rival-item').forEach(el=>el.onclick=()=>openRival(+el.dataset.i));
+ $('#rivalList').querySelectorAll('.rival-item').forEach(el=>el.onclick=()=>openRival(+el.dataset.i));
 }
 function renderSkills(){
  $('#skillGrid').innerHTML=Object.entries(SKILLS).map(([k,s])=>`<div class="skill-card ${activeSkill===k?'selected':''}" data-skill="${k}" style="--skill-color:${s.color}"><div class="skill-icon">${s.icon}</div><h3>${s.name}</h3><p>${s.desc}</p><div class="skill-level"><span>${s.trait}</span><b>Lv ${state.skills[k]}</b></div><div class="skill-progress"><i style="width:${Math.min(100,state.skills[k])}%"></i></div></div>`).join('');
@@ -113,7 +117,20 @@ function answerQuestion(i){const chosen=currentQuestion.opts[i],correctIndex=cur
 // ----- Clan clash -----
 function openBattlePicker(){
  if(selectedMembers.size<3){goScreen('clan');toast('Choose at least 3 available members first.');return}
- showModal(`<span class="eyebrow">MATCHMAKING</span><h3>Choose a rival</h3><p>Your army has <b>${selectedMembers.size}</b> troops. The rival will field the same number for this prototype.</p>${rivals.map((r,i)=>`<div class="rival-item battle-pick" data-i="${i}"><div class="rival-crest">${r.crest}</div><div><strong>${r.name}</strong><small>${r.region}</small></div><div class="rating-pill">${r.rating}</div></div>`).join('')}<div class="modal-actions"><button class="secondary" data-close>Cancel</button></div>`);$('[data-close]').onclick=closeModal;$$('.battle-pick').forEach(el=>el.onclick=()=>{const r=rivals[+el.dataset.i];closeModal();startBattle(r)});
+ showModal(`<span class="eyebrow">WAR COUNCIL</span><h3>Choose a target</h3><p>Your army has <b>${selectedMembers.size}</b> troops. After deployment you will watch them march across the Singapore realm before the clash begins.</p>${rivals.map((r,i)=>`<div class="rival-item battle-pick" data-i="${i}"><div class="rival-crest">${r.crest}</div><div><strong>${r.name}</strong><small>${r.region} · Rating ${r.rating}</small></div><div class="rating-pill">MARCH</div></div>`).join('')}<div class="modal-actions"><button class="secondary" data-close>Cancel</button></div>`);$('[data-close]').onclick=closeModal;$$('.battle-pick').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;closeModal();marchToRival(i)});
+}
+function marchToRival(i){
+ if(marching)return;
+ marching=true;
+ const enemy=rivals[i],coord=RIVAL_COORDS[i],path=$('#routePath'),army=$('#marchingArmy'),hud=$('#marchHud');
+ goScreen('map');
+ const midX=(HOME_COORD.x+coord.x)/2,curveY=Math.min(HOME_COORD.y,coord.y)-90;
+ path.setAttribute('d',`M${HOME_COORD.x} ${HOME_COORD.y} Q${midX} ${curveY} ${coord.x} ${coord.y}`);
+ army.innerHTML=[...selectedMembers].map((_,idx)=>`<g class="troop-token" transform="translate(${(idx%5)*14-28} ${Math.floor(idx/5)*16})"><circle class="troop-dot" r="10"/><text y="6">${members[[...selectedMembers][idx]].avatar}</text></g>`).join('');
+ army.classList.remove('hidden');hud.classList.remove('hidden');$('#marchTarget').textContent=`${enemy.name} · ${enemy.region}`;$('#marchTroops').textContent=selectedMembers.size;
+ const total=path.getTotalLength(),duration=6000,start=performance.now();let lastSec=6;
+ function frame(now){const t=Math.min(1,(now-start)/duration),ease=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,pt=path.getPointAtLength(total*ease),pt2=path.getPointAtLength(Math.min(total,total*ease+3)),ang=Math.atan2(pt2.y-pt.y,pt2.x-pt.x)*180/Math.PI;army.setAttribute('transform',`translate(${pt.x} ${pt.y}) rotate(${ang})`);const sec=Math.max(0,Math.ceil((duration-(now-start))/1000));if(sec!==lastSec){lastSec=sec;$('#marchEta').textContent=sec}if(t<1)requestAnimationFrame(frame);else{setTimeout(()=>{army.classList.add('hidden');hud.classList.add('hidden');marching=false;startBattle(enemy)},500)}}
+ requestAnimationFrame(frame);
 }
 function startBattle(enemy){
  const team=[...selectedMembers].map(i=>members[i]);const n=team.length;const avg=k=>Math.round(team.reduce((a,m)=>a+m.skills[k],0)/n);battle={enemy,team,maxHp:10000,ourHp:10000,enemyHp:10000,seconds:90,asked:0,correct:0,combo:0,started:Date.now(),question:null,lastQAt:Date.now(),skills:Object.fromEntries(Object.keys(SKILLS).map(k=>[k,avg(k)]))};
