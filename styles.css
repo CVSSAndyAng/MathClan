@@ -24,3 +24,35 @@
 
 @media(max-width:980px){.skill-hud{top:74px;grid-template-columns:repeat(2,1fr)}.world-layout{grid-template-columns:1fr}.singapore-map{aspect-ratio:1500/994}.rivals-card{order:2}}
 @media(max-width:650px){.skill-hud{top:74px;padding:6px 8px 2px;grid-template-columns:repeat(2,1fr);gap:5px}.skill-hud-item{padding:6px 8px;grid-template-columns:26px 1fr auto}.skill-hud-icon{font-size:18px}.skill-hud-copy strong{font-size:10px}.skill-hud-copy small{display:none}.skill-hud-level{font-size:11px}.singapore-map{aspect-ratio:1/1;overflow:auto}.singapore-map svg{width:auto;height:100%;min-width:690px;transform:none}.map-tip{font-size:10px;max-width:72%}}
+
+
+/* ===== V1.3 visibility + self-contained map patch ===== */
+:root{--topbar-h:74px}
+body[data-screen="train"] .skill-hud{display:none}
+body[data-screen="train"] main{padding-top:12px}
+body[data-screen="train"] #screen-train .section-head{margin-bottom:10px;align-items:center}
+body[data-screen="train"] #screen-train .section-head h2{font-size:clamp(24px,3vw,34px);margin-top:2px}
+body[data-screen="train"] #screen-train .section-head p{margin-top:3px;line-height:1.25;font-size:13px}
+body[data-screen="train"] #screen-train .skill-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
+body[data-screen="train"] #screen-train .skill-card{min-height:124px;padding:12px 14px}
+body[data-screen="train"] #screen-train .skill-icon{font-size:27px}
+body[data-screen="train"] #screen-train .skill-card h3{margin:3px 0 2px;font-size:17px}
+body[data-screen="train"] #screen-train .skill-card p{font-size:10px;line-height:1.25;min-height:26px}
+body[data-screen="train"] #screen-train .skill-level{margin-top:7px}
+body[data-screen="train"] #screen-train .training-zone{min-height:260px;padding:14px}
+body[data-screen="train"] #screen-train .empty-state{padding:32px 16px}
+body[data-screen="train"] #screen-train .big-icon{font-size:42px}
+body[data-screen="train"] #screen-train .empty-state h3{margin:8px 0 5px}
+body[data-screen="train"] #screen-train .empty-state p{margin:0}
+.skill-hud{top:var(--topbar-h)}
+.singapore-map{background:#d9b97d}
+#vintageMapImage{display:block}
+#realmSvg{background:#d9b97d}
+@media(max-width:980px){
+  body[data-screen="train"] #screen-train .skill-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+  body[data-screen="train"] #screen-train .skill-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  body[data-screen="train"] #screen-train .skill-card{min-height:112px;padding:9px}
+  body[data-screen="train"] #screen-train .skill-card p{display:none}
+}
