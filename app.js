@@ -39,7 +39,10 @@ let activeSkill=null,currentQuestion=null,battle=null;
 
 // ===== V1.4 Audio engine: original WebAudio ambience + battle effects =====
 const AUDIO_PREF_KEY='mathclans-audio-on';
+const AUDIO_VOLUME_KEY='mathclans-audio-volume';
 let audioOn=localStorage.getItem(AUDIO_PREF_KEY)!=='0';
+let audioVolume=Math.max(0,Math.min(1,Number(localStorage.getItem(AUDIO_VOLUME_KEY) ?? .35)));
+if(!Number.isFinite(audioVolume))audioVolume=.35;
 let audioCtx=null,musicTimer=null,musicMode='ambient',masterGain=null;
 function ensureAudio(){
   if(!audioOn)return false;
@@ -47,7 +50,7 @@ function ensureAudio(){
     const AC=window.AudioContext||window.webkitAudioContext;
     if(!AC)return false;
     audioCtx=new AC();
-    masterGain=audioCtx.createGain();masterGain.gain.value=.22;masterGain.connect(audioCtx.destination);
+    masterGain=audioCtx.createGain();masterGain.gain.value=audioOn?audioVolume:0;masterGain.connect(audioCtx.destination);
   }
   if(audioCtx.state==='suspended')audioCtx.resume();
   if(!musicTimer)startMusicLoop();
@@ -85,8 +88,10 @@ function startMusicLoop(){
   playPhrase();musicTimer=setInterval(playPhrase,musicMode==='battle'?2900:5200);
 }
 function setMusicMode(mode){if(musicMode===mode&&musicTimer)return;musicMode=mode;if(audioOn&&audioCtx)startMusicLoop()}
-function updateAudioButton(){const b=$('#audioToggle');if(b){b.textContent=audioOn?'🔊':'🔇';b.title=audioOn?'Sound on — click to mute':'Sound muted — click to enable'}}
-function toggleAudio(){audioOn=!audioOn;localStorage.setItem(AUDIO_PREF_KEY,audioOn?'1':'0');if(audioOn){ensureAudio();setMusicMode(document.body.dataset.screen==='battle'&&battle?'battle':'ambient')}else if(audioCtx){clearInterval(musicTimer);musicTimer=null;audioCtx.suspend()}updateAudioButton()}
+function applyAudioVolume(){if(masterGain&&audioCtx){masterGain.gain.cancelScheduledValues(audioCtx.currentTime);masterGain.gain.setTargetAtTime(audioOn?audioVolume:0,audioCtx.currentTime,.02)}const s=$('#volumeSlider'),v=$('#volumeValue');if(s)s.value=Math.round(audioVolume*100);if(v)v.textContent=Math.round(audioVolume*100)+'%'}
+function updateAudioButton(){const b=$('#audioToggle');if(b){b.textContent=audioOn?'Sound ON':'Sound OFF';b.classList.toggle('off',!audioOn);b.setAttribute('aria-pressed',audioOn?'true':'false');b.title=audioOn?'Sound is on — click to switch off':'Sound is off — click to switch on'}applyAudioVolume()}
+function toggleAudio(){audioOn=!audioOn;localStorage.setItem(AUDIO_PREF_KEY,audioOn?'1':'0');if(audioOn){ensureAudio();applyAudioVolume();setMusicMode(document.body.dataset.screen==='battle'&&battle?'battle':'ambient')}else{if(audioCtx)applyAudioVolume();clearInterval(musicTimer);musicTimer=null;}updateAudioButton()}
+function setAudioVolume(value){audioVolume=Math.max(0,Math.min(1,Number(value)/100));localStorage.setItem(AUDIO_VOLUME_KEY,String(audioVolume));if(audioVolume>0&&!audioOn){audioOn=true;localStorage.setItem(AUDIO_PREF_KEY,'1');ensureAudio()}applyAudioVolume();updateAudioButton()}
 
 function init(){
  if(!document.body.dataset.screen) document.body.dataset.screen='map';
@@ -97,6 +102,7 @@ function init(){
 function wire(){
  $$('.bottom-nav button').forEach(b=>b.onclick=()=>{ensureAudio();if(!marching)goScreen(b.dataset.screen)});
  const at=$('#audioToggle');if(at){at.onclick=toggleAudio;updateAudioButton()}
+ const vs=$('#volumeSlider');if(vs){vs.value=Math.round(audioVolume*100);vs.oninput=e=>setAudioVolume(e.target.value)}
  document.addEventListener('pointerdown',()=>ensureAudio(),{once:true});
  $$('[data-go]').forEach(b=>b.onclick=()=>goScreen(b.dataset.go));
  $$('.rival-hq').forEach(n=>n.onclick=()=>openRival(+n.dataset.rival));
@@ -124,7 +130,7 @@ function renderSkillHud(){
 function renderMembers(){
  $('#memberList').innerHTML=members.map((m,i)=>`<div class="member ${selectedMembers.has(i)?'selected':''} ${!m.online?'offline':''}" data-i="${i}"><div class="member-avatar">${m.avatar}</div><div><strong>${m.name}</strong><small>${SKILLS[m.role].icon} ${SKILLS[m.role].name} specialist</small></div><span class="role-tag">${m.online?'READY':'OFFLINE'}</span></div>`).join('');
  $$('.member').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;if(!members[i].online)return;if(selectedMembers.has(i))selectedMembers.delete(i);else if(selectedMembers.size<10)selectedMembers.add(i);renderMembers();});
- const n=selectedMembers.size;$('#selectedCount').textContent=n;$('#armyLabel').textContent=n?`${n} troop${n>1?'s':''} ready`:'Choose 1–10 players';$('#findBattleBtn').disabled=n<1;
+ const n=selectedMembers.size;$('#selectedCount').textContent=n;$('#armyLabel').textContent=n?`${n} troop${n>1?'s':''} ready`:'Choose 1–10 players';const deploy=$('#findBattleBtn');if(deploy){deploy.disabled=false;deploy.classList.toggle('needs-selection',n<1);deploy.setAttribute('aria-disabled',n<1?'true':'false');deploy.textContent=n?`Choose Target & March (${n})`:'Choose Target & March';}
 }
 function renderTeamBars(){
  const src=selectedMembers.size?[...selectedMembers].map(i=>members[i]):members.filter(m=>m.online).slice(0,5);
@@ -178,7 +184,7 @@ function answerQuestion(i){const chosen=currentQuestion.opts[i],correctIndex=cur
 
 // ----- Clan clash -----
 function openBattlePicker(){
- if(selectedMembers.size<1){goScreen('clan');toast('Choose at least 1 available member first.');return}
+ if(selectedMembers.size<1){goScreen('clan');toast('Select 1 available member to march.');return}
  showModal(`<span class="eyebrow">WAR COUNCIL</span><h3>Choose a target</h3><p>Your army has <b>${selectedMembers.size}</b> troops. After deployment you will watch them march across the Singapore realm before the clash begins.</p>${rivals.map((r,i)=>`<div class="rival-item battle-pick" data-i="${i}"><div class="rival-crest">${r.crest}</div><div><strong>${r.name}</strong><small>${r.region} · Rating ${r.rating}</small></div><div class="rating-pill">MARCH</div></div>`).join('')}<div class="modal-actions"><button class="secondary" data-close>Cancel</button></div>`);$('[data-close]').onclick=closeModal;$$('.battle-pick').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;closeModal();marchToRival(i)});
 }
 function marchToRival(i){

@@ -1,8 +1,8 @@
-# MathClans — Test V1.4
+# MathClans — Test V1.4.1
 
 This is the next gameplay test build. It remains a local/simulated multiplayer prototype so the core game can be tuned before a real backend is added.
 
-## V1.4 changes
+## V1.4.1 changes
 
 - Clan war size changed to **1–10 players**.
 - Team battle scoring uses **average performance**, not total player count. Larger teams receive only a small capped troop bonus.
@@ -33,3 +33,9 @@ No image or audio asset folder is required for this test build; the map and batt
 4. On arrival, verify the old Singapore background appears behind a clear foreground battle.
 5. Check team size (e.g. 7v7), Team Avg, HP, skill effects and mental sums.
 6. Toggle the speaker button to test music/sound on and off.
+
+
+## V1.4.1 hotfix
+- 1-player deployment is explicitly enabled. The march button is always clickable; with zero selected it prompts for one player, and with 1-10 selected it opens target selection.
+- Audio control now shows Sound ON / Sound OFF and includes a persistent volume slider.
+- CSS/JS links include a version query to reduce stale GitHub Pages browser caching.
