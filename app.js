@@ -37,15 +37,20 @@ let selectedMembers=new Set();
 let activeSkill=null,currentQuestion=null,battle=null;
 
 
-// ===== V1.4.3 Audio engine: isolated from UI so audio can never block clicks =====
+// ===== V1.4.5 Audio engine =====
+// Separate supplied MP3s are used for non-battle and battle music. SFX use WebAudio.
+// Audio is deliberately isolated from navigation so browser autoplay errors can never block game controls.
 const AUDIO_PREF_KEY='mathclans-audio-on';
 const AUDIO_VOLUME_KEY='mathclans-audio-volume';
 let audioOn=localStorage.getItem(AUDIO_PREF_KEY)!=='0';
 let audioVolume=Math.max(0,Math.min(1,Number(localStorage.getItem(AUDIO_VOLUME_KEY) ?? .35)));
 if(!Number.isFinite(audioVolume))audioVolume=.35;
-let audioCtx=null,musicTimer=null,musicMode='ambient',masterGain=null,musicStarting=false;
+let audioCtx=null,musicMode='ambient',masterGain=null;
+const ambientTrack=new Audio('assets/non-battle-music.mp3');
+const battleTrack=new Audio('assets/battle-music.mp3');
+[ambientTrack,battleTrack].forEach(t=>{t.loop=true;t.preload='auto';t.volume=audioVolume});
 
-function ensureAudio(startMusic=true){
+function ensureAudioContext(){
   try{
     if(!audioOn)return false;
     if(!audioCtx){
@@ -60,17 +65,32 @@ function ensureAudio(startMusic=true){
       const r=audioCtx.resume();
       if(r&&typeof r.catch==='function')r.catch(()=>{});
     }
-    if(startMusic&&!musicTimer&&!musicStarting)startMusicLoop();
     return true;
   }catch(err){
-    console.warn('Audio unavailable:',err);
+    console.warn('WebAudio unavailable:',err);
     return false;
   }
 }
-function safeAudioStart(){try{ensureAudio(true)}catch(err){console.warn('Audio start skipped:',err)}}
+function playAmbient(){
+  try{
+    if(!audioOn||musicMode!=='ambient')return;
+    ambientTrack.volume=audioVolume;
+    const p=ambientTrack.play();
+    if(p&&typeof p.catch==='function')p.catch(()=>{});
+  }catch(err){console.warn('Ambient music unavailable:',err)}
+}
+function pauseAmbient(){try{ambientTrack.pause()}catch(err){}}
+function safeAudioStart(){
+  try{
+    if(!audioOn)return;
+    ensureAudioContext();
+    if(musicMode==='ambient')playAmbient();
+    else playBattleMusic();
+  }catch(err){console.warn('Audio start skipped:',err)}
+}
 function tone(freq=440,dur=.12,type='sine',vol=.06,when=0){
   try{
-    if(!ensureAudio(false)||!audioCtx||!masterGain)return;
+    if(!ensureAudioContext()||!audioCtx||!masterGain)return;
     const t=audioCtx.currentTime+when,o=audioCtx.createOscillator(),g=audioCtx.createGain();
     o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(.0001,t);
     g.gain.exponentialRampToValueAtTime(Math.max(.001,vol),t+.015);
@@ -80,7 +100,7 @@ function tone(freq=440,dur=.12,type='sine',vol=.06,when=0){
 }
 function noiseHit(vol=.05,dur=.08){
   try{
-    if(!ensureAudio(false)||!audioCtx||!masterGain)return;
+    if(!ensureAudioContext()||!audioCtx||!masterGain)return;
     const sr=audioCtx.sampleRate,b=audioCtx.createBuffer(1,Math.max(1,Math.floor(sr*dur)),sr),d=b.getChannelData(0);
     for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);
     const src=audioCtx.createBufferSource(),g=audioCtx.createGain();src.buffer=b;g.gain.value=vol;src.connect(g);g.connect(masterGain);src.start();
@@ -98,35 +118,29 @@ function playSfx(name){
     if(name==='defeat'){[330,294,247,196].forEach((f,i)=>tone(f,.35,'sine',.045,i*.16))}
   }catch(err){console.warn('SFX skipped:',err)}
 }
-function stopMusicLoop(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}musicStarting=false}
-function startMusicLoop(){
+function pauseBattle(){try{battleTrack.pause()}catch(err){}}
+function playBattleMusic(){
   try{
-    if(!audioOn||!audioCtx||musicStarting)return;
-    musicStarting=true;stopMusicLoop();musicStarting=true;
-    const playPhrase=()=>{
-      try{
-        if(!audioOn||!audioCtx)return;
-        const ambient=[196,247,294,247],battleNotes=[110,147,165,147,123,147,185,165];
-        const notes=musicMode==='battle'?battleNotes:ambient;
-        const gap=musicMode==='battle'?.34:1.15,vol=musicMode==='battle'?.018:.012;
-        notes.forEach((f,i)=>{
-          tone(f,musicMode==='battle'?.24:.8,musicMode==='battle'?'triangle':'sine',vol,i*gap);
-          if(musicMode==='ambient')tone(f/2,.95,'sine',.008,i*gap);
-        });
-      }catch(err){console.warn('Music phrase skipped:',err)}
-    };
-    const interval=musicMode==='battle'?2900:5200;
-    playPhrase();
-    musicTimer=setInterval(playPhrase,interval);
-    musicStarting=false;
-  }catch(err){musicStarting=false;console.warn('Music unavailable:',err)}
+    if(!audioOn||musicMode!=='battle')return;
+    battleTrack.volume=audioVolume;
+    const p=battleTrack.play();
+    if(p&&typeof p.catch==='function')p.catch(()=>{});
+  }catch(err){console.warn('Battle music unavailable:',err)}
 }
 function setMusicMode(mode){
   musicMode=mode;
-  if(audioOn&&audioCtx){stopMusicLoop();startMusicLoop()}
+  if(mode==='battle'){
+    pauseAmbient();
+    if(audioOn)playBattleMusic();
+  }else{
+    pauseBattle();
+    if(audioOn)playAmbient();
+  }
 }
 function applyAudioVolume(){
   try{
+    ambientTrack.volume=audioOn?audioVolume:0;
+    battleTrack.volume=audioOn?audioVolume:0;
     if(masterGain&&audioCtx){
       masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
       masterGain.gain.setTargetAtTime(audioOn?audioVolume:0,audioCtx.currentTime,.02);
@@ -147,17 +161,17 @@ function updateAudioButton(){
   applyAudioVolume();
 }
 function toggleAudio(){
-  // Never allow an audio failure to interrupt the UI click.
   try{
     audioOn=!audioOn;
     localStorage.setItem(AUDIO_PREF_KEY,audioOn?'1':'0');
     if(audioOn){
-      ensureAudio(false);
+      ensureAudioContext();
       applyAudioVolume();
-      setMusicMode(document.body.dataset.screen==='battle'&&battle?'battle':'ambient');
-      if(!musicTimer)startMusicLoop();
+      if(document.body.dataset.screen==='battle'&&battle)setMusicMode('battle');
+      else setMusicMode('ambient');
     }else{
-      stopMusicLoop();
+      pauseAmbient();
+      pauseBattle();
       applyAudioVolume();
     }
   }catch(err){console.warn('Audio toggle skipped:',err)}
@@ -166,7 +180,6 @@ function toggleAudio(){
 function setAudioVolume(value){
   audioVolume=Math.max(0,Math.min(1,Number(value)/100));
   localStorage.setItem(AUDIO_VOLUME_KEY,String(audioVolume));
-  // Moving the volume slider does NOT switch Sound ON automatically.
   applyAudioVolume();
 }
 
