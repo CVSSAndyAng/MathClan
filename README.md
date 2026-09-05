@@ -1,23 +1,27 @@
-# MathClans — Battle for Lion City (Test V1.1)
+# MathClans - Test V1.2
 
-This test build focuses on the visual direction and attack flow.
+This test build focuses on visual polish and usability.
 
-## Main changes in V1.1
-- Fantasy parchment/illustrated-map UI instead of the flat dark map.
-- More detailed Singapore realm with terrain regions, mountains, forests, landmarks and clan HQ nodes.
-- Rival HQ nodes are clickable directly on the map.
-- Clan attack now includes a 6-second simulated troop march across the map before the mental-sum clash begins.
-- Marching party size matches the 3–10 clan members selected for war.
-- Live march HUD shows rival, destination, troop count and countdown.
-- Existing worked-solution MCQ training and Clan Clash mechanics are retained.
+## Changes in V1.2
 
-## Test locally
-Open `index.html` in a browser.
+- Uses the supplied vintage Singapore map as the main campaign map background.
+- Clan HQs and rival HQs are overlaid directly on the Singapore map.
+- Troops visibly march along an animated route from your HQ to the selected rival HQ before battle starts.
+- Mathematical skill levels are now always visible in a sticky skill HUD below the top bar.
+- Switching tabs resets the page to the top so the Training skill cards are not hidden by the previous scroll position.
+- Existing training, clan roster, rankings and Clan Clash mechanics remain in place.
 
-## Recommended test sequence
-1. Open Clan Hall.
-2. Select 3–10 online members.
-3. Click **Choose Target & March**.
-4. Choose a rival.
-5. Watch the troops move across the map.
-6. The 90-second mental-sum Clan Clash starts automatically after arrival.
+## Run locally
+
+Open `index.html` in a browser, or host the folder with GitHub Pages.
+
+## GitHub Pages
+
+Upload these items to the repository root:
+
+- `index.html`
+- `styles.css`
+- `app.js`
+- `assets/` folder
+
+The map image must remain at `assets/vintage-singapore-map.png`.

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>MathClans: Battle for Lion City — Test V1.1</title>
+  <title>MathClans: Battle for Lion City — Test V1.2</title>
   <meta name="theme-color" content="#17130f" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -14,6 +14,8 @@
       <div class="player-strip"><div class="mini-avatar" id="miniAvatar">🐲</div><div><strong id="playerName">Player One</strong><small>Lv <span id="playerLevel">1</span> · <span id="playerXp">0</span> XP</small></div></div>
       <div class="currency"><span>💎</span><b id="crystals">250</b></div>
     </header>
+
+    <div class="skill-hud" id="skillHud" aria-label="Mathematical skill levels"></div>
 
     <main>
       <section id="screen-map" class="screen active">
@@ -30,45 +32,38 @@
             </div>
 
             <div class="singapore-map" id="singaporeMap">
-              <svg id="realmSvg" viewBox="0 0 1000 560" role="img" aria-label="Fantasy Singapore strategy map">
+              <svg id="realmSvg" viewBox="0 0 1500 994" role="img" aria-label="Vintage Singapore campaign map">
                 <defs>
-                  <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#315c64"/><stop offset="1" stop-color="#1d424a"/></linearGradient>
-                  <linearGradient id="landA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d3b56f"/><stop offset="1" stop-color="#988253"/></linearGradient>
-                  <linearGradient id="landB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b8c985"/><stop offset="1" stop-color="#7f9765"/></linearGradient>
-                  <linearGradient id="landC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ca8e77"/><stop offset="1" stop-color="#a05d60"/></linearGradient>
-                  <filter id="softShadow"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-opacity=".48"/></filter>
-                  <filter id="nodeGlow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                  <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#f4d27d"/></marker>
+                  <filter id="nodeGlow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                  <filter id="routeShadow"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#2a1708" flood-opacity=".75"/></filter>
+                  <marker id="arrow" markerWidth="13" markerHeight="13" refX="9" refY="4" orient="auto"><path d="M0,0 L0,8 L10,4 z" fill="#ffd56b"/></marker>
+                  <radialGradient id="homeNode" cx="35%" cy="25%"><stop offset="0" stop-color="#fff0a0"/><stop offset=".35" stop-color="#7b5ac7"/><stop offset="1" stop-color="#30204f"/></radialGradient>
+                  <radialGradient id="rivalNode" cx="35%" cy="25%"><stop offset="0" stop-color="#ffd391"/><stop offset=".35" stop-color="#8d382f"/><stop offset="1" stop-color="#361716"/></radialGradient>
                 </defs>
-                <rect width="1000" height="560" fill="url(#sea)"/>
-                <g class="sea-scribbles" opacity=".34">
-                  <path d="M80 105q18-12 36 0t36 0 M800 86q18-12 36 0t36 0 M780 450q18-12 36 0t36 0 M120 430q18-12 36 0t36 0"/>
-                  <path d="M55 160q16 10 32 0t32 0 M875 180q16 10 32 0t32 0 M530 86q16 10 32 0t32 0"/>
+                <image href="assets/vintage-singapore-map.png" x="0" y="0" width="1500" height="994" preserveAspectRatio="xMidYMid slice"/>
+                <rect x="18" y="18" width="1464" height="958" rx="22" class="map-inner-frame"/>
+
+                <g class="arcane-sites" aria-label="Arcane mathematical sites">
+                  <g transform="translate(665 470)"><circle r="27"/><text y="9">∑</text></g>
+                  <g transform="translate(842 596)"><circle r="27"/><text y="9">π</text></g>
+                  <g transform="translate(556 568)"><circle r="27"/><text y="9">△</text></g>
+                  <g transform="translate(1035 478)"><circle r="27"/><text y="9">σ</text></g>
                 </g>
-                <g filter="url(#softShadow)">
-                  <path class="realm-land west" d="M86 285 C125 183 223 136 348 149 C405 111 480 115 535 145 L508 262 C431 285 359 334 267 349 C174 359 111 337 86 285Z"/>
-                  <path class="realm-land east" d="M506 145 C579 116 695 126 768 171 C842 173 914 222 916 286 C900 343 822 365 745 359 C682 410 590 402 515 369 L478 274Z"/>
-                  <path class="realm-land central" d="M343 150 C405 108 485 114 530 143 C567 158 598 191 603 230 C569 269 520 302 465 320 C411 299 360 270 326 227 C321 196 328 170 343 150Z"/>
-                </g>
-                <g class="terrain-lines">
-                  <path d="M133 273c75-26 151-13 218 11s141 34 205 6 132-37 216-24"/>
-                  <path d="M174 327c69-31 141-40 215-15s135 48 205 32 132-40 195-37"/>
-                </g>
-                <g class="mountains" aria-hidden="true">
-                  <path d="M185 222l24-42 24 42 20-31 27 50h-116z"/><path d="M302 242l28-52 28 52 20-33 28 52H278z"/><path d="M690 215l23-41 23 41 18-28 25 45H668z"/>
-                </g>
-                <g class="forests" aria-hidden="true"><text x="212" y="310">♠ ♠ ♠</text><text x="628" y="324">♣ ♣ ♣ ♣</text><text x="814" y="297">♠ ♠ ♠</text></g>
-                <g class="city-sketch" aria-hidden="true"><path d="M429 246v-36h12v36m8 0v-55h15v55m9 0v-28h11v28m9 0v-43h16v43"/></g>
-                <g class="region-label"><text x="198" y="182">WOODLANDS</text><text x="339" y="164">CENTRAL NORTH</text><text x="733" y="177">PUNGGOL</text><text x="799" y="334">TAMPINES</text><text x="634" y="378">BEDOK</text><text x="465" y="344">CENTRAL</text><text x="166" y="352">JURONG</text></g>
-                <g class="arcane-sites"><g transform="translate(414 303)"><circle r="25"/><text y="8">✦</text></g><g transform="translate(590 192)"><circle r="22"/><text y="8">∑</text></g></g>
+
+                <path id="routePath" class="march-route" d="M790 674 Q1000 510 1110 505" marker-end="url(#arrow)" filter="url(#routeShadow)"/>
+
                 <g class="hq-nodes">
-                  <g class="hq home-hq" transform="translate(506 263)" filter="url(#nodeGlow)"><circle r="36"/><text y="10">🏰</text><path d="M-47 43h94l-11 20h-72z"/><text class="banner" y="57">YOU</text></g>
-                  <g class="hq rival-hq" data-rival="0" transform="translate(810 304)"><circle r="31"/><text y="9">🐙</text></g>
-                  <g class="hq rival-hq" data-rival="1" transform="translate(176 304)"><circle r="31"/><text y="9">🦊</text></g>
-                  <g class="hq rival-hq" data-rival="2" transform="translate(708 197)"><circle r="31"/><text y="9">🐼</text></g>
-                  <g class="hq rival-hq" data-rival="3" transform="translate(632 342)"><circle r="31"/><text y="9">🐲</text></g>
+                  <g class="hq home-hq" transform="translate(790 674)" filter="url(#nodeGlow)">
+                    <circle r="45"/>
+                    <text class="hq-icon" y="13">🏰</text>
+                    <path class="hq-banner-shape" d="M-63 54h126l-12 26h-102z"/>
+                    <text class="banner" y="72">YOUR HQ</text>
+                  </g>
+                  <g class="hq rival-hq" data-rival="0" transform="translate(1110 505)" filter="url(#nodeGlow)"><circle r="39"/><text class="hq-icon" y="12">🐙</text><text class="hq-name" y="64">PI-RATES</text></g>
+                  <g class="hq rival-hq" data-rival="1" transform="translate(355 675)" filter="url(#nodeGlow)"><circle r="39"/><text class="hq-icon" y="12">🦊</text><text class="hq-name" y="64">ANGLE RANGERS</text></g>
+                  <g class="hq rival-hq" data-rival="2" transform="translate(930 360)" filter="url(#nodeGlow)"><circle r="39"/><text class="hq-icon" y="12">🐼</text><text class="hq-name" y="64">PANDA PRIME</text></g>
+                  <g class="hq rival-hq" data-rival="3" transform="translate(1010 600)" filter="url(#nodeGlow)"><circle r="39"/><text class="hq-icon" y="12">🐲</text><text class="hq-name" y="64">DATA DRAKES</text></g>
                 </g>
-                <path id="routePath" class="march-route" d="M506 263 Q650 218 810 304" marker-end="url(#arrow)"/>
                 <g id="marchingArmy" class="marching-army hidden"></g>
               </svg>
 
@@ -76,7 +71,7 @@
                 <div class="march-crest">⚔</div>
                 <div><small>ARMY ON THE MOVE</small><strong id="marchTarget">Pi-Rates · Tampines</strong><span><b id="marchTroops">5</b> troops · arrival in <b id="marchEta">6</b>s</span></div>
               </div>
-              <div class="map-tip">Select a rival HQ or clan card to inspect the target.</div>
+              <div class="map-tip">Select a rival banner on the vintage Singapore map to inspect the target.</div>
             </div>
           </div>
 
