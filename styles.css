@@ -153,3 +153,9 @@ main{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env
   .rival-item:hover,.hq:hover,.primary:hover,.secondary:hover,.formation-card:hover{transform:none;filter:none}
   .rival-item:active,.primary:active,.secondary:active,.formation-card:active,.worked-option:active{filter:brightness(1.12);transform:scale(.99)}
 }
+
+/* V1.5.4 recent mastery confidence */
+.confidence-row,.hero-confidence-line{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:7px;font:800 10px ui-sans-serif,system-ui,sans-serif;color:#d8c9aa}.confidence-row b,.hero-confidence-line b{color:var(--skill-color)}
+.confidence-meter{height:5px;margin-top:4px;background:#120f0d;border:1px solid #4c3b2b;border-radius:20px;overflow:hidden}.confidence-meter i{display:block;height:100%;background:linear-gradient(90deg,#c65a4c,var(--skill-color));transition:width .25s ease}
+.hero-confidence-line{margin-top:7px}.softcap-note{display:block;margin-top:5px;color:#bbaa8c;font-size:9px;line-height:1.25}
+body[data-screen="train"] #screen-train .confidence-row{margin-top:5px}.difficulty{white-space:nowrap}
