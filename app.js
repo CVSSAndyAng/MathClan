@@ -213,8 +213,9 @@ function wire(){
  $$('.rival-hq').forEach(n=>n.onclick=()=>{openRival(+n.dataset.rival);safeAudioStart()});
  $('#nextQuestionBtn').onclick=()=>{newQuestion(activeSkill);safeAudioStart()};
  $('#findBattleBtn').onclick=()=>{openBattlePicker();safeAudioStart()};
+ // Use the form's native submit event for keyboard Enter/Return.
+ // This avoids iPad Safari's keydown-before-value-commit behaviour that could require a second press.
  $('#mentalForm').onsubmit=e=>{e.preventDefault();submitMental();safeAudioStart()};
- const ma=$('#mentalAnswer');if(ma){ma.onkeydown=e=>{if(e.key==='Enter'||e.keyCode===13){e.preventDefault();if(!e.repeat){submitMental();safeAudioStart()}}}};
  $('#editClanBtn').onclick=()=>{openClanEditor();safeAudioStart()};
 }
 function goScreen(name){document.body.dataset.screen=name;if(name==='hero')renderHero();if(name==='clan')renderPresence();setMusicMode(name==='battle'&&battle?'battle':'ambient');$$('.screen').forEach(s=>s.classList.remove('active'));$('#screen-'+name).classList.add('active');$$('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));window.scrollTo({top:0,left:0,behavior:'instant'});if(name==='battle'&&!battle) openBattlePicker()}

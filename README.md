@@ -1,3 +1,7 @@
+MathClans V1.5.2 Test
+
+Hotfix: pressing Enter/Return once now submits a battle answer. The duplicate keydown handler was removed so iPad Safari can commit the input value and submit the form in one action.
+
 # MathClans: Battle for Lion City — Test V1.5
 
 ## What changed
