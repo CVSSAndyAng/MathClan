@@ -214,6 +214,7 @@ function wire(){
  $('#nextQuestionBtn').onclick=()=>{newQuestion(activeSkill);safeAudioStart()};
  $('#findBattleBtn').onclick=()=>{openBattlePicker();safeAudioStart()};
  $('#mentalForm').onsubmit=e=>{e.preventDefault();submitMental();safeAudioStart()};
+ const ma=$('#mentalAnswer');if(ma){ma.onkeydown=e=>{if(e.key==='Enter'||e.keyCode===13){e.preventDefault();if(!e.repeat){submitMental();safeAudioStart()}}}};
  $('#editClanBtn').onclick=()=>{openClanEditor();safeAudioStart()};
 }
 function goScreen(name){document.body.dataset.screen=name;if(name==='hero')renderHero();if(name==='clan')renderPresence();setMusicMode(name==='battle'&&battle?'battle':'ambient');$$('.screen').forEach(s=>s.classList.remove('active'));$('#screen-'+name).classList.add('active');$$('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));window.scrollTo({top:0,left:0,behavior:'instant'});if(name==='battle'&&!battle) openBattlePicker()}
@@ -328,7 +329,7 @@ function startBattle(enemy){
  setMusicMode('battle');$('#battleOurClan').textContent=state.clan.name;$('#battleEnemyClan').textContent=enemy.name;$('#ourFormation').innerHTML=team.map(m=>`<span class="unit">${m.avatar}</span>`).join('');$('#enemyFormation').innerHTML=team.map((_,i)=>`<span class="unit">${['🐙','🐺','🦇','🐗','🦂','🦅','🐯','🦈','🐍','🦁'][i]}</span>`).join('');$('#battleTeamSize').textContent=`${n}v${n}`;const bf=$('#battleFormation');if(bf)bf.textContent=`${FORMATIONS[selectedFormation].icon} ${FORMATIONS[selectedFormation].name}`;$('#battleSkillRunes').innerHTML=Object.entries(SKILLS).map(([k,s])=>`<div class="rune">${s.icon} ${s.name}<b>${battle.skills[k]}</b></div>`).join('');goScreen('battle');nextMental();updateBattleUi();$('#mentalAnswer').value='';$('#mentalAnswer').focus();battle.timer=setInterval(tickBattle,1000);
 }
 function mentalQ(){let a=rnd(8,90),b=rnd(2,35),op=['+','−','×'][rnd(0,2)],ans;if(op==='+')ans=a+b;else if(op==='−'){if(b>a)[a,b]=[b,a];ans=a-b}else{a=rnd(2,15);b=rnd(2,12);ans=a*b}return{text:`${a} ${op} ${b}`,ans}}
-function nextMental(){if(!battle)return;battle.question=mentalQ();battle.lastQAt=Date.now();$('#mentalQuestion').textContent=battle.question.text;$('#mentalAnswer').value=''}
+function nextMental(){if(!battle)return;battle.question=mentalQ();battle.lastQAt=Date.now();$('#mentalQuestion').textContent=battle.question.text;const a=$('#mentalAnswer');a.value='';setTimeout(()=>{try{a.focus({preventScroll:true})}catch(e){a.focus()}},30)}
 function teammateWaveScore(member){
  const mastery=(member.skills.algebra+member.skills.geometry+member.skills.trigonometry+member.skills.statistics)/4;
  const correctChance=Math.min(.97,.68+mastery/420);const correct=Math.random()<correctChance;if(!correct)return 0;

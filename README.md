@@ -10,3 +10,10 @@
 - Non-battle and battle MP3 tracks remain included.
 
 This is still a simulated multiplayer test build. Real login accounts, realtime online presence and real player-vs-player answers belong to the backend multiplayer version.
+
+
+## V1.5.1 amendments
+- Strike can be submitted with the Enter/Return key as well as the Strike button.
+- The answer field uses the iPad keyboard Go/Return action where supported.
+- Added iPad portrait and landscape responsive layouts, larger touch targets, safe-area handling, and 16px+ inputs to prevent Safari auto-zoom.
+- Navigation, roster selection, training choices and battle controls are touch-optimised.

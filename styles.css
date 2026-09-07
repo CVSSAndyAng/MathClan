@@ -93,3 +93,63 @@ body[data-screen="train"] #screen-train .skill-card{min-height:142px}
 .achievement-list{display:grid;gap:9px}.achievement{display:flex;gap:10px;align-items:center;background:#14100cc7;border:1px solid #55482e;border-radius:12px;padding:10px}.achievement>span{font-size:1.6rem}.achievement strong,.achievement small{display:block}.achievement small{color:#aea486;margin-top:2px}.achievement.locked{opacity:.5}.achievement.unlocked{border-color:#9a7b38;box-shadow:inset 0 0 20px #a5771717}
 @media(max-width:980px){.hero-layout{grid-template-columns:1fr 1fr}.mastery-board{grid-column:1/-1;order:3}.formation-picker{grid-template-columns:repeat(2,1fr)}.presence-strip{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.hero-layout{grid-template-columns:1fr}.mastery-board{grid-column:auto}.presence-strip{grid-template-columns:1fr 1fr}.war-stat-grid{grid-template-columns:1fr 1fr}.formation-picker{grid-template-columns:1fr}.bottom-nav{overflow-x:auto;justify-content:flex-start}.bottom-nav button{min-width:78px;flex:0 0 auto}}
+
+
+/* ===== V1.5.1: iPad + keyboard battle input ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
+body{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+button,.rival-item,.hq,.skill-card,.worked-option,.member,.formation-card{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button{min-height:44px}
+input,select,textarea{font-size:16px}
+#mentalAnswer{font-size:clamp(22px,3vw,32px);min-height:52px}
+#strikeBtn{min-height:52px;min-width:116px}
+.bottom-nav{padding-bottom:max(6px,env(safe-area-inset-bottom));bottom:max(12px,env(safe-area-inset-bottom))}
+.topbar{padding-top:max(12px,env(safe-area-inset-top));padding-left:max(22px,env(safe-area-inset-left));padding-right:max(22px,env(safe-area-inset-right))}
+main{padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+
+/* iPad portrait and landscape */
+@media (min-width:700px) and (max-width:1180px){
+  main{padding-bottom:108px}
+  .topbar{grid-template-columns:minmax(220px,1fr) auto;gap:10px}
+  .player-strip{display:none}
+  .top-actions{justify-self:end}
+  .skill-hud{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .skill-hud::-webkit-scrollbar{display:none}
+  .world-layout{grid-template-columns:1fr}
+  .rivals-card{order:2}
+  .singapore-map{min-height:440px}
+  .singapore-map svg{min-height:440px}
+  .skill-grid{grid-template-columns:repeat(2,1fr)}
+  .clan-layout{grid-template-columns:1fr}
+  .hero-layout{grid-template-columns:1fr 1fr}
+  .mastery-board{grid-column:1/-1}
+  .formation-picker{grid-template-columns:repeat(3,1fr)}
+  .bottom-nav{width:min(calc(100vw - 28px),720px);justify-content:space-around;overflow:hidden}
+  .bottom-nav button{width:auto;min-width:84px;flex:1}
+  .battlefield{min-height:330px}
+  .formation{min-height:150px}
+  .unit{width:58px;height:58px;font-size:34px}
+  .mental-console{padding:14px}
+  .mental-meta{justify-content:center}
+  #mentalForm{display:grid;grid-template-columns:minmax(180px,1fr) 130px;gap:10px;max-width:620px;margin:0 auto}
+  #mentalAnswer{width:100%}
+  #strikeBtn{width:100%}
+}
+
+@media (min-width:700px) and (max-width:1180px) and (orientation:landscape){
+  .world-banner{margin-bottom:10px}
+  .world-banner h2{font-size:30px}
+  .guardian-card{min-width:240px}
+  .singapore-map{min-height:380px}
+  .singapore-map svg{min-height:380px}
+  .battle-header{margin-top:0}
+  .battlefield{min-height:260px}
+  .formation{min-height:120px}
+  .mental-question{font-size:clamp(34px,5vw,58px)}
+  .mental-console{position:relative}
+}
+
+@media (hover:none) and (pointer:coarse){
+  .rival-item:hover,.hq:hover,.primary:hover,.secondary:hover,.formation-card:hover{transform:none;filter:none}
+  .rival-item:active,.primary:active,.secondary:active,.formation-card:active,.worked-option:active{filter:brightness(1.12);transform:scale(.99)}
+}
