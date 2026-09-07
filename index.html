@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>MathClans: Battle for Lion City — Test V1.4.2</title>
+  <title>MathClans: Battle for Lion City — Test V1.5</title>
   <meta name="theme-color" content="#17130f" />
-  <link rel="stylesheet" href="styles.css?v=1.4.5" />
+  <link rel="stylesheet" href="styles.css?v=1.5" />
 </head>
 <body>
   <div id="app">
@@ -91,22 +91,49 @@
 
       <section id="screen-clan" class="screen">
         <div class="section-head"><div><span class="eyebrow">CLAN HALL</span><h2 id="clanTitle">Merlion Scholars</h2><p>Choose 1–10 available members for war. Each selected member becomes one deployed troop. Battle scoring uses team averages, so larger teams do not automatically win.</p></div><button class="primary" id="editClanBtn">Edit Clan</button></div>
+        <div class="presence-strip fantasy-panel" id="presenceStrip">
+          <div><span>👥 MEMBERS</span><b id="presenceMembers">10</b></div>
+          <div><span>🟢 ONLINE</span><b id="presenceOnline">0</b></div>
+          <div><span>⚔ WAR READY</span><b id="presenceReady">0</b></div>
+          <div><span>🔵 DEPLOYED</span><b id="presenceDeployed">0</b></div>
+        </div>
         <div class="clan-layout"><div class="clan-summary fantasy-panel"><div class="guardian huge">🐉</div><h3 id="clanNameCard">Merlion Scholars</h3><div class="clan-stats"><div><span>🏆 Rating</span><b id="clanRating">1500</b></div><div><span>🗺 Influence</span><b>18%</b></div><div><span>👥 Members</span><b id="memberCount">10</b></div></div><div class="team-bars" id="teamBars"></div></div><div class="members-card fantasy-panel"><div class="panel-title"><div><span class="eyebrow">WAR ROSTER</span><h3>Available Members</h3></div><div><b id="selectedCount">0</b>/10 selected</div></div><div id="memberList" class="member-list"></div><div class="deploy-box"><div><span>Selected army</span><strong id="armyLabel">Choose 1–10 players</strong></div><button class="primary" id="findBattleBtn" type="button">Choose Target & March</button></div></div></div>
+      </section>
+
+      <section id="screen-hero" class="screen">
+        <div class="section-head"><div><span class="eyebrow">HERO PROFILE</span><h2>Your Mathling</h2><p>Your four abilities never reach MAX. Training improves mastery forever while battle bonuses use diminishing returns.</p></div><div class="hero-title-badge" id="heroTitleBadge">Rising Scholar</div></div>
+        <div class="hero-layout">
+          <div class="hero-card fantasy-panel">
+            <div class="hero-avatar-stage"><div class="hero-aura"></div><div class="hero-avatar" id="heroAvatar">🐲</div></div>
+            <h3 id="heroName">Player One</h3><p id="heroClanLine">🐉 Merlion Scholars</p>
+            <div class="hero-level-row"><span>PLAYER LEVEL</span><b>Lv <span id="heroLevel">1</span></b></div>
+            <div class="hero-xp-track"><i id="heroXpBar"></i></div>
+            <small id="heroXpText">0 XP</small>
+          </div>
+          <div class="mastery-board fantasy-panel">
+            <div class="panel-title"><div><span class="eyebrow">UNLIMITED MASTERY</span><h3>Ability Trees</h3></div></div>
+            <div id="heroMasteryList" class="hero-mastery-list"></div>
+          </div>
+          <div class="achievement-board fantasy-panel">
+            <div class="panel-title"><div><span class="eyebrow">ACHIEVEMENTS</span><h3>Unlocked Relics</h3></div></div>
+            <div id="achievementList" class="achievement-list"></div>
+          </div>
+        </div>
       </section>
 
       <section id="screen-battle" class="screen battle-screen">
         <div class="battle-header fantasy-panel"><div class="battle-clan"><div class="crest">🐉</div><div><b id="battleOurClan">Merlion Scholars</b><span id="ourHpText">10000 HP</span></div></div><div class="timer-orb"><span>CLASH</span><b id="battleTimer">90</b></div><div class="battle-clan enemy"><div><b id="battleEnemyClan">Pi-Rates</b><span id="enemyHpText">10000 HP</span></div><div class="crest">🐙</div></div></div>
         <div class="hp-row"><div class="hp-track"><div id="ourHpBar" class="hp-fill"></div></div><div class="versus">VS</div><div class="hp-track enemy-track"><div id="enemyHpBar" class="hp-fill enemy-fill"></div></div></div>
         <div class="battlefield fantasy-panel"><div class="formation our-team" id="ourFormation"></div><div class="battle-effects" id="battleEffects"><div class="effect-text">⚔ CLAN CLASH ⚔</div></div><div class="formation enemy-team" id="enemyFormation"></div></div>
-        <div class="mental-console fantasy-panel"><div class="mental-meta"><span>MENTAL SUM CHAIN</span><span>Team <b id="battleTeamSize">1v1</b></span><span>Accuracy <b id="battleAccuracy">100%</b></span><span>Team Avg <b id="battleTeamAvg">0</b></span><span>Combo <b id="battleCombo">0</b></span></div><div class="mental-question" id="mentalQuestion">18 + 27</div><form id="mentalForm"><input id="mentalAnswer" inputmode="numeric" autocomplete="off" placeholder="Answer" /><button class="primary">Strike</button></form><div class="skill-runes" id="battleSkillRunes"></div></div>
+        <div class="mental-console fantasy-panel"><div class="mental-meta"><span>MENTAL SUM CHAIN</span><span>Team <b id="battleTeamSize">1v1</b></span><span>Formation <b id="battleFormation">Balanced</b></span><span>Accuracy <b id="battleAccuracy">100%</b></span><span>Team Avg <b id="battleTeamAvg">0</b></span><span>Combo <b id="battleCombo">0</b></span></div><div class="mental-question" id="mentalQuestion">18 + 27</div><form id="mentalForm"><input id="mentalAnswer" inputmode="numeric" autocomplete="off" placeholder="Answer" /><button class="primary">Strike</button></form><div class="skill-runes" id="battleSkillRunes"></div></div>
       </section>
 
       <section id="screen-ranking" class="screen"><div class="section-head"><div><span class="eyebrow">LION CITY LEAGUE</span><h2>Clan Rankings</h2><p>Rating moves up and down after Clan Clashes. Mathematical mastery never drops from losing a battle.</p></div></div><div class="ranking-card fantasy-panel"><div class="rank-head"><span>Rank</span><span>Clan</span><span>Region</span><span>Rating</span></div><div id="rankingList"></div></div></section>
     </main>
 
-    <nav class="bottom-nav"><button class="active" data-screen="map"><span>🗺</span>Map</button><button data-screen="train"><span>📚</span>Train</button><button data-screen="clan"><span>🏰</span>Clan</button><button data-screen="battle"><span>⚔</span>Battle</button><button data-screen="ranking"><span>🏆</span>Rank</button></nav>
+    <nav class="bottom-nav"><button class="active" data-screen="map"><span>🗺</span>Map</button><button data-screen="train"><span>📚</span>Train</button><button data-screen="clan"><span>🏰</span>Clan</button><button data-screen="hero"><span>🐲</span>Hero</button><button data-screen="battle"><span>⚔</span>Battle</button><button data-screen="ranking"><span>🏆</span>Rank</button></nav>
   </div>
   <div id="modalBackdrop" class="modal-backdrop hidden"><div class="modal fantasy-panel" id="modal"></div></div>
-  <script src="app.js?v=1.4.5"></script>
+  <script src="app.js?v=1.5"></script>
 </body>
 </html>

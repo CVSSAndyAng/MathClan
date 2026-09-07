@@ -1,12 +1,12 @@
-# MathClans V1.4.5 Test
+# MathClans: Battle for Lion City — Test V1.5
 
-Audio update:
+## What changed
+- Added simulated live clan presence: Members / Online / War Ready / Deployed.
+- Added a two-step War Council with 5 formations: Balanced, Assault, Fortress, Precision and Tactical.
+- Formations give small RPG modifiers while live mental-sum performance remains the main factor.
+- Added a Hero screen showing unlimited mastery, subskills, soft-ceiling battle effects and achievement relics.
+- Selected warriors change to DEPLOYED during battle and return to WAR READY afterward.
+- 1–10 player battles remain supported.
+- Non-battle and battle MP3 tracks remain included.
 
-- Non-battle music: Pufino - Glamorous (freetouse.com).mp3
-- Battle music: Aylex - Back To Life (freetouse.com).mp3
-- The Sound ON/OFF control and volume slider control both tracks and battle sound effects.
-- Non-battle music is used on Map, Train, Clan and Rank screens.
-- Battle music starts when a Clan Clash begins and stops when the clash ends.
-- The 1-10 player battle rule remains unchanged.
-
-Upload the full package to GitHub Pages, including the `assets` folder.
+This is still a simulated multiplayer test build. Real login accounts, realtime online presence and real player-vs-player answers belong to the backend multiplayer version.

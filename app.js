@@ -22,22 +22,36 @@ const RIVAL_COORDS=[{x:1110,y:505,region:'Tampines'},{x:355,y:675,region:'Jurong
 const HOME_COORD={x:790,y:674};
 let marching=false;
 const members=[
- {name:'Ari',avatar:'🐲',role:'algebra',online:1,skills:{algebra:78,geometry:42,trigonometry:58,statistics:51}},
- {name:'Mei',avatar:'🐰',role:'trigonometry',online:1,skills:{algebra:49,geometry:55,trigonometry:84,statistics:57}},
- {name:'Zane',avatar:'🦊',role:'statistics',online:1,skills:{algebra:54,geometry:48,trigonometry:64,statistics:81}},
- {name:'Nora',avatar:'🐼',role:'geometry',online:1,skills:{algebra:52,geometry:87,trigonometry:43,statistics:61}},
- {name:'Kai',avatar:'🤖',role:'algebra',online:1,skills:{algebra:82,geometry:58,trigonometry:61,statistics:44}},
- {name:'Lina',avatar:'🐧',role:'statistics',online:1,skills:{algebra:51,geometry:66,trigonometry:47,statistics:79}},
- {name:'Theo',avatar:'🦖',role:'geometry',online:1,skills:{algebra:63,geometry:77,trigonometry:52,statistics:48}},
- {name:'Sora',avatar:'🐱',role:'trigonometry',online:1,skills:{algebra:47,geometry:55,trigonometry:80,statistics:65}},
- {name:'Ben',avatar:'🐶',role:'algebra',online:0,skills:{algebra:74,geometry:49,trigonometry:51,statistics:56}},
- {name:'Ivy',avatar:'🦄',role:'geometry',online:1,skills:{algebra:55,geometry:75,trigonometry:65,statistics:60}}
+ {name:'Ari',avatar:'🐲',role:'algebra',status:'ready',skills:{algebra:78,geometry:42,trigonometry:58,statistics:51}},
+ {name:'Mei',avatar:'🐰',role:'trigonometry',status:'ready',skills:{algebra:49,geometry:55,trigonometry:84,statistics:57}},
+ {name:'Zane',avatar:'🦊',role:'statistics',status:'training',skills:{algebra:54,geometry:48,trigonometry:64,statistics:81}},
+ {name:'Nora',avatar:'🐼',role:'geometry',status:'ready',skills:{algebra:52,geometry:87,trigonometry:43,statistics:61}},
+ {name:'Kai',avatar:'🤖',role:'algebra',status:'ready',skills:{algebra:82,geometry:58,trigonometry:61,statistics:44}},
+ {name:'Lina',avatar:'🐧',role:'statistics',status:'online',skills:{algebra:51,geometry:66,trigonometry:47,statistics:79}},
+ {name:'Theo',avatar:'🦖',role:'geometry',status:'ready',skills:{algebra:63,geometry:77,trigonometry:52,statistics:48}},
+ {name:'Sora',avatar:'🐱',role:'trigonometry',status:'online',skills:{algebra:47,geometry:55,trigonometry:80,statistics:65}},
+ {name:'Ben',avatar:'🐶',role:'algebra',status:'offline',skills:{algebra:74,geometry:49,trigonometry:51,statistics:56}},
+ {name:'Ivy',avatar:'🦄',role:'geometry',status:'ready',skills:{algebra:55,geometry:75,trigonometry:65,statistics:60}}
 ];
+const STATUS_META={ready:{label:'WAR READY',icon:'⚔',online:true,selectable:true},online:{label:'ONLINE',icon:'🟢',online:true,selectable:true},training:{label:'TRAINING',icon:'📚',online:true,selectable:true},deployed:{label:'DEPLOYED',icon:'🔵',online:true,selectable:false},offline:{label:'OFFLINE',icon:'⚪',online:false,selectable:false}};
+const FORMATIONS={
+ balanced:{name:'Balanced',icon:'⚖',desc:'Steady all-round formation.',mods:{algebra:1,geometry:1,trigonometry:1,statistics:1}},
+ assault:{name:'Assault',icon:'⚔',desc:'+6% Algebra effect, -2% Geometry effect.',mods:{algebra:1.06,geometry:.98,trigonometry:1,statistics:1}},
+ fortress:{name:'Fortress',icon:'🛡',desc:'+6% Geometry effect, -2% Trigonometry effect.',mods:{algebra:1,geometry:1.06,trigonometry:.98,statistics:1}},
+ precision:{name:'Precision',icon:'🎯',desc:'+6% Trigonometry effect, -2% Statistics effect.',mods:{algebra:1,geometry:1,trigonometry:1.06,statistics:.98}},
+ tactical:{name:'Tactical',icon:'📊',desc:'+6% Statistics effect, -2% Algebra effect.',mods:{algebra:.98,geometry:1,trigonometry:1,statistics:1.06}}
+};
+const SUBSKILLS={
+ algebra:['Simplifying expressions','Fractions','Solving equations','Simultaneous equations','Substitution'],
+ geometry:['Straight-line equation','Gradient','Distance between points','Area & perimeter','Surface area & volume'],
+ trigonometry:['Trig ratios','Pythagoras','Sine rule','Cosine rule','Triangle area'],
+ statistics:['Mean / median / mode','Probability','Quartiles & IQR','Standard deviation','Data displays']
+};
 let selectedMembers=new Set();
-let activeSkill=null,currentQuestion=null,battle=null;
+let activeSkill=null,currentQuestion=null,battle=null,pendingEnemy=null,selectedFormation='balanced';
 
 
-// ===== V1.4.5 Audio engine =====
+// ===== V1.5 Audio engine =====
 // Separate supplied MP3s are used for non-battle and battle music. SFX use WebAudio.
 // Audio is deliberately isolated from navigation so browser autoplay errors can never block game controls.
 const AUDIO_PREF_KEY='mathclans-audio-on';
@@ -187,7 +201,7 @@ function init(){
  if(!document.body.dataset.screen) document.body.dataset.screen='map';
  $('#playerName').textContent=state.player.name;$('#playerLevel').textContent=state.player.level;$('#playerXp').textContent=state.player.xp;$('#crystals').textContent=state.player.crystals;$('#miniAvatar').textContent=state.player.avatar;
  $('#mapClanName').textContent=$('#clanTitle').textContent=$('#clanNameCard').textContent=state.clan.name;$('#clanRating').textContent=state.clan.rating;$('#clanInfluence').textContent=state.clan.influence+'%';$('#memberCount').textContent=members.length;
- renderRivals();renderSkills();renderSkillHud();renderMembers();renderTeamBars();renderRanking();wire();
+ renderRivals();renderSkills();renderSkillHud();renderMembers();renderTeamBars();renderPresence();renderHero();renderRanking();wire();
 }
 function wire(){
  // Navigation runs FIRST. Audio starts afterwards and is fully isolated.
@@ -202,7 +216,7 @@ function wire(){
  $('#mentalForm').onsubmit=e=>{e.preventDefault();submitMental();safeAudioStart()};
  $('#editClanBtn').onclick=()=>{openClanEditor();safeAudioStart()};
 }
-function goScreen(name){document.body.dataset.screen=name;setMusicMode(name==='battle'&&battle?'battle':'ambient');$$('.screen').forEach(s=>s.classList.remove('active'));$('#screen-'+name).classList.add('active');$$('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));window.scrollTo({top:0,left:0,behavior:'instant'});if(name==='battle'&&!battle) openBattlePicker()}
+function goScreen(name){document.body.dataset.screen=name;if(name==='hero')renderHero();if(name==='clan')renderPresence();setMusicMode(name==='battle'&&battle?'battle':'ambient');$$('.screen').forEach(s=>s.classList.remove('active'));$('#screen-'+name).classList.add('active');$$('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));window.scrollTo({top:0,left:0,behavior:'instant'});if(name==='battle'&&!battle) openBattlePicker()}
 function renderRivals(){
  $('#rivalList').innerHTML=rivals.map((r,i)=>`<div class="rival-item" data-i="${i}"><div class="rival-crest">${r.crest}</div><div><strong>${r.name}</strong><small>${r.region} · ${Math.abs(r.rating-state.clan.rating)} rating gap</small></div><div class="rating-pill">${r.rating}</div></div>`).join('');
  $('#rivalList').querySelectorAll('.rival-item').forEach(el=>el.onclick=()=>openRival(+el.dataset.i));
@@ -219,12 +233,23 @@ function renderSkillHud(){
  hud.innerHTML=Object.entries(SKILLS).map(([k,s])=>`<div class="skill-hud-item" style="--skill-color:${s.color}"><div class="skill-hud-icon">${s.icon}</div><div class="skill-hud-copy"><strong>${s.name}</strong><small>${s.trait}</small></div><div class="skill-hud-level">Lv ${state.skills[k]}</div><div class="skill-hud-meter"><i style="width:${masteryProgress(state.skills[k])}%"></i></div></div>`).join('');
 }
 function renderMembers(){
- $('#memberList').innerHTML=members.map((m,i)=>`<div class="member ${selectedMembers.has(i)?'selected':''} ${!m.online?'offline':''}" data-i="${i}"><div class="member-avatar">${m.avatar}</div><div><strong>${m.name}</strong><small>${SKILLS[m.role].icon} ${SKILLS[m.role].name} specialist</small></div><span class="role-tag">${m.online?'READY':'OFFLINE'}</span></div>`).join('');
- $$('.member').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;if(!members[i].online)return;if(selectedMembers.has(i))selectedMembers.delete(i);else if(selectedMembers.size<10)selectedMembers.add(i);renderMembers();});
- const n=selectedMembers.size;$('#selectedCount').textContent=n;$('#armyLabel').textContent=n?`${n} troop${n>1?'s':''} ready`:'Choose 1–10 players';const deploy=$('#findBattleBtn');if(deploy){deploy.disabled=false;deploy.classList.toggle('needs-selection',n<1);deploy.setAttribute('aria-disabled',n<1?'true':'false');deploy.textContent=n?`Choose Target & March (${n})`:'Choose Target & March';}
+ $('#memberList').innerHTML=members.map((m,i)=>{const meta=STATUS_META[m.status]||STATUS_META.offline;return `<div class="member ${selectedMembers.has(i)?'selected':''} ${!meta.online?'offline':''} ${!meta.selectable?'locked':''}" data-i="${i}"><div class="member-avatar">${m.avatar}</div><div><strong>${m.name}</strong><small>${SKILLS[m.role].icon} ${SKILLS[m.role].name} specialist</small></div><span class="role-tag status-${m.status}">${meta.icon} ${meta.label}</span></div>`}).join('');
+ $$('.member').forEach(el=>el.onclick=()=>{const i=+el.dataset.i,meta=STATUS_META[members[i].status]||STATUS_META.offline;if(!meta.selectable){toast(`${members[i].name} is ${meta.label.toLowerCase()} and cannot deploy.`);return}if(selectedMembers.has(i))selectedMembers.delete(i);else if(selectedMembers.size<10)selectedMembers.add(i);renderMembers();renderTeamBars();renderPresence();});
+ const n=selectedMembers.size;$('#selectedCount').textContent=n;$('#armyLabel').textContent=n?`${n} troop${n>1?'s':''} ready`:'Choose 1–10 players';const deploy=$('#findBattleBtn');if(deploy){deploy.disabled=false;deploy.classList.toggle('needs-selection',n<1);deploy.setAttribute('aria-disabled',n<1?'true':'false');deploy.textContent=n?`War Council (${n})`:'Choose Target & March';}
+}
+function renderPresence(){
+ const total=members.length,online=members.filter(m=>STATUS_META[m.status]?.online).length,ready=members.filter(m=>m.status==='ready'||m.status==='online').length,deployed=members.filter(m=>m.status==='deployed').length;
+ const set=(id,v)=>{const el=$(id);if(el)el.textContent=v};set('#presenceMembers',total);set('#presenceOnline',online);set('#presenceReady',ready);set('#presenceDeployed',deployed);
+}
+function renderHero(){
+ const set=(id,v)=>{const el=$(id);if(el)el.textContent=v};set('#heroAvatar',state.player.avatar);set('#heroName',state.player.name);set('#heroClanLine',`${state.clan.guardian} ${state.clan.name}`);set('#heroLevel',state.player.level);set('#heroXpText',`${state.player.xp} XP`);
+ const xpBar=$('#heroXpBar');if(xpBar)xpBar.style.width=Math.min(100,(state.player.xp%100))+'%';
+ const strongest=Object.keys(SKILLS).sort((a,b)=>state.skills[b]-state.skills[a])[0];set('#heroTitleBadge',`${SKILLS[strongest].icon} ${masteryTitle(state.skills[strongest])} ${SKILLS[strongest].name}`);
+ const list=$('#heroMasteryList');if(list)list.innerHTML=Object.entries(SKILLS).map(([k,s])=>{const lvl=state.skills[k],subs=SUBSKILLS[k];return `<div class="hero-mastery" style="--skill-color:${s.color}"><div class="hero-mastery-head"><span class="hero-mastery-icon">${s.icon}</span><div><strong>${s.name}</strong><small>${masteryTitle(lvl)} · battle effect ${softCap(lvl).toFixed(1)}% / 15% soft ceiling</small></div><b>Lv ${lvl}</b></div><div class="hero-mastery-meter"><i style="width:${masteryProgress(lvl)}%"></i></div><div class="subskill-chips">${subs.map((x,i)=>`<span>${x} <b>Lv ${Math.max(1,lvl-(i*2)%7)}</b></span>`).join('')}</div></div>`}).join('');
+ const achievements=$('#achievementList');if(achievements){const total=Object.values(state.skills).reduce((a,b)=>a+b,0);const rows=[['⚔','X-Blade',state.skills.algebra>=25],['🛡','Hex Shield',state.skills.geometry>=25],['🎯','Angle Bow',state.skills.trigonometry>=25],['🔮','Probability Orb',state.skills.statistics>=25],['👑','Scholar Crown',total>=200],['✨','Lion City Aura',state.clan.rating>=1600]];achievements.innerHTML=rows.map(([ic,n,ok])=>`<div class="achievement ${ok?'unlocked':'locked'}"><span>${ok?ic:'🔒'}</span><div><strong>${n}</strong><small>${ok?'Unlocked':'Keep training to unlock'}</small></div></div>`).join('')}
 }
 function renderTeamBars(){
- const src=selectedMembers.size?[...selectedMembers].map(i=>members[i]):members.filter(m=>m.online).slice(0,5);
+ const src=selectedMembers.size?[...selectedMembers].map(i=>members[i]):members.filter(m=>STATUS_META[m.status]?.online).slice(0,5);
  const avg=k=>src.length?Math.round(src.reduce((a,m)=>a+m.skills[k],0)/src.length):0;
  $('#teamBars').innerHTML=Object.entries(SKILLS).map(([k,s])=>`<div class="team-bar"><span>${s.icon}</span><div class="track"><i style="width:${avg(k)}%;background:${s.color}"></i></div><b>${avg(k)}</b></div>`).join('');
 }
@@ -271,12 +296,18 @@ function makeStats(){
 function q(topic,problem,correct,wrong,explanation,dna){const opts=shuffle([{html:correct,correct:true},...wrong.map(x=>({html:x,correct:false}))]);return{topic,problem,opts,explanation,dna:dna+'-'+rnd(1,9999)}}
 function generateQuestion(skill){let maker={algebra:makeAlgebra,geometry:makeGeometry,trigonometry:makeTrig,statistics:makeStats}[skill],attempt=0,qv;do{qv=maker();attempt++}while(state.history.includes(qv.dna)&&attempt<12);return qv}
 function newQuestion(skill){currentQuestion=generateQuestion(skill);$('#trainingEmpty').classList.add('hidden');$('#questionPanel').classList.remove('hidden');$('#qSkill').textContent=`${SKILLS[skill].icon} ${SKILLS[skill].name.toUpperCase()}`;$('#qTitle').textContent=currentQuestion.topic;$('#qDifficulty').textContent=['COMMON','SKILLED','ADVANCED'][rnd(0,2)];$('#qProblem').innerHTML=currentQuestion.problem;$('#workedOptions').innerHTML=currentQuestion.opts.map((o,i)=>`<div class="worked-option" data-i="${i}"><span class="option-letter">${'ABCD'[i]}</span><div class="math-lines">${o.html}</div></div>`).join('');$('#feedback').classList.add('hidden');$('#nextQuestionBtn').classList.add('hidden');$$('.worked-option').forEach(el=>el.onclick=()=>answerQuestion(+el.dataset.i));}
-function answerQuestion(i){const chosen=currentQuestion.opts[i],correctIndex=currentQuestion.opts.findIndex(o=>o.correct);$$('.worked-option').forEach((el,j)=>{el.classList.add('disabled');if(j===correctIndex)el.classList.add('correct');else if(j===i&&!chosen.correct)el.classList.add('wrong');el.onclick=null});if(chosen.correct){state.streak++;state.player.xp+=8;state.skills[activeSkill]=state.skills[activeSkill]+1;state.player.crystals+=2;$('#feedback').innerHTML=`<strong>✅ Correct reasoning</strong><br>${currentQuestion.explanation}<br><br>${SKILLS[activeSkill].icon} ${SKILLS[activeSkill].name} Mastery +1 · 💎 +2`; } else {state.streak=0;$('#feedback').innerHTML=`<strong>❌ Study the highlighted correct working</strong><br>${currentQuestion.explanation}`;}state.history.push(currentQuestion.dna);state.history=state.history.slice(-100);$('#trainStreak').textContent=state.streak;$('#feedback').classList.remove('hidden');$('#nextQuestionBtn').classList.remove('hidden');save();init();activeSkill=activeSkill;renderSkills();}
+function answerQuestion(i){const chosen=currentQuestion.opts[i],correctIndex=currentQuestion.opts.findIndex(o=>o.correct);$$('.worked-option').forEach((el,j)=>{el.classList.add('disabled');if(j===correctIndex)el.classList.add('correct');else if(j===i&&!chosen.correct)el.classList.add('wrong');el.onclick=null});if(chosen.correct){state.streak++;state.player.xp+=8;state.player.level=1+Math.floor(state.player.xp/100);state.skills[activeSkill]=state.skills[activeSkill]+1;state.player.crystals+=2;$('#feedback').innerHTML=`<strong>✅ Correct reasoning</strong><br>${currentQuestion.explanation}<br><br>${SKILLS[activeSkill].icon} ${SKILLS[activeSkill].name} Mastery +1 · 💎 +2`; } else {state.streak=0;$('#feedback').innerHTML=`<strong>❌ Study the highlighted correct working</strong><br>${currentQuestion.explanation}`;}state.history.push(currentQuestion.dna);state.history=state.history.slice(-100);$('#trainStreak').textContent=state.streak;$('#feedback').classList.remove('hidden');$('#nextQuestionBtn').classList.remove('hidden');save();init();activeSkill=activeSkill;renderSkills();}
 
 // ----- Clan clash -----
 function openBattlePicker(){
  if(selectedMembers.size<1){goScreen('clan');toast('Select 1 available member to march.');return}
- showModal(`<span class="eyebrow">WAR COUNCIL</span><h3>Choose a target</h3><p>Your army has <b>${selectedMembers.size}</b> troops. After deployment you will watch them march across the Singapore realm before the clash begins.</p>${rivals.map((r,i)=>`<div class="rival-item battle-pick" data-i="${i}"><div class="rival-crest">${r.crest}</div><div><strong>${r.name}</strong><small>${r.region} · Rating ${r.rating}</small></div><div class="rating-pill">MARCH</div></div>`).join('')}<div class="modal-actions"><button class="secondary" data-close>Cancel</button></div>`);$('[data-close]').onclick=closeModal;$$('.battle-pick').forEach(el=>el.onclick=()=>{const i=+el.dataset.i;closeModal();marchToRival(i)});
+ showModal(`<span class="eyebrow">WAR COUNCIL · STEP 1</span><h3>Choose a target</h3><p>Your army has <b>${selectedMembers.size}</b> troop${selectedMembers.size>1?'s':''}. Select the rival headquarters you want to attack.</p>${rivals.map((r,i)=>`<div class="rival-item battle-pick" data-i="${i}"><div class="rival-crest">${r.crest}</div><div><strong>${r.name}</strong><small>${r.region} · Rating ${r.rating}</small></div><div class="rating-pill">SELECT</div></div>`).join('')}<div class="modal-actions"><button class="secondary" data-close>Cancel</button></div>`);
+ $('[data-close]').onclick=closeModal;$$('.battle-pick').forEach(el=>el.onclick=()=>{pendingEnemy=+el.dataset.i;openWarCouncil(pendingEnemy)});
+}
+function openWarCouncil(i){
+ const enemy=rivals[i],team=[...selectedMembers].map(x=>members[x]),avg=k=>Math.round(team.reduce((a,m)=>a+m.skills[k],0)/team.length);
+ showModal(`<span class="eyebrow">WAR COUNCIL · STEP 2</span><h3>${state.clan.guardian} ${state.clan.name} → ${enemy.crest} ${enemy.name}</h3><p>Choose a formation before your ${team.length}-troop army marches to ${enemy.region}. Formation bonuses are deliberately small so live Maths performance remains decisive.</p><div class="war-team-preview">${team.map(m=>`<div><span>${m.avatar}</span><small>${m.name}</small></div>`).join('')}</div><div class="war-stat-grid">${Object.entries(SKILLS).map(([k,s])=>`<div><span>${s.icon} ${s.name}</span><b>${avg(k)}</b></div>`).join('')}</div><div class="formation-picker">${Object.entries(FORMATIONS).map(([k,f])=>`<button type="button" class="formation-card ${selectedFormation===k?'selected':''}" data-formation="${k}"><span>${f.icon}</span><strong>${f.name}</strong><small>${f.desc}</small></button>`).join('')}</div><div class="modal-actions"><button class="secondary" id="warBack">Back</button><button class="primary" id="confirmMarch">Deploy ${team.length} Troop${team.length>1?'s':''}</button></div>`);
+ $('#warBack').onclick=openBattlePicker;$$('.formation-card').forEach(b=>b.onclick=()=>{selectedFormation=b.dataset.formation;openWarCouncil(i)});$('#confirmMarch').onclick=()=>{closeModal();marchToRival(i)};
 }
 function marchToRival(i){
  if(marching)return;
@@ -292,8 +323,9 @@ function marchToRival(i){
  requestAnimationFrame(frame);
 }
 function startBattle(enemy){
- const team=[...selectedMembers].map(i=>members[i]);const n=team.length;const avg=k=>Math.round(team.reduce((a,m)=>a+m.skills[k],0)/n);battle={enemy,team,maxHp:10000,ourHp:10000,enemyHp:10000,seconds:90,asked:0,correct:0,combo:0,started:Date.now(),question:null,lastQAt:Date.now(),teamPowerSamples:[],skills:Object.fromEntries(Object.keys(SKILLS).map(k=>[k,avg(k)]))};
- setMusicMode('battle');$('#battleOurClan').textContent=state.clan.name;$('#battleEnemyClan').textContent=enemy.name;$('#ourFormation').innerHTML=team.map(m=>`<span class="unit">${m.avatar}</span>`).join('');$('#enemyFormation').innerHTML=team.map((_,i)=>`<span class="unit">${['🐙','🐺','🦇','🐗','🦂','🦅','🐯','🦈','🐍','🦁'][i]}</span>`).join('');$('#battleTeamSize').textContent=`${n}v${n}`;$('#battleSkillRunes').innerHTML=Object.entries(SKILLS).map(([k,s])=>`<div class="rune">${s.icon} ${s.name}<b>${battle.skills[k]}</b></div>`).join('');goScreen('battle');nextMental();updateBattleUi();$('#mentalAnswer').value='';$('#mentalAnswer').focus();battle.timer=setInterval(tickBattle,1000);
+ const selectedIdx=[...selectedMembers];selectedIdx.forEach(i=>members[i].status='deployed');renderMembers();renderPresence();
+ const team=selectedIdx.map(i=>members[i]);const n=team.length;const avg=k=>Math.round(team.reduce((a,m)=>a+m.skills[k],0)/n);battle={enemy,team,selectedIdx,formation:selectedFormation,maxHp:10000,ourHp:10000,enemyHp:10000,seconds:90,asked:0,correct:0,combo:0,started:Date.now(),question:null,lastQAt:Date.now(),teamPowerSamples:[],skills:Object.fromEntries(Object.keys(SKILLS).map(k=>[k,avg(k)]))};
+ setMusicMode('battle');$('#battleOurClan').textContent=state.clan.name;$('#battleEnemyClan').textContent=enemy.name;$('#ourFormation').innerHTML=team.map(m=>`<span class="unit">${m.avatar}</span>`).join('');$('#enemyFormation').innerHTML=team.map((_,i)=>`<span class="unit">${['🐙','🐺','🦇','🐗','🦂','🦅','🐯','🦈','🐍','🦁'][i]}</span>`).join('');$('#battleTeamSize').textContent=`${n}v${n}`;const bf=$('#battleFormation');if(bf)bf.textContent=`${FORMATIONS[selectedFormation].icon} ${FORMATIONS[selectedFormation].name}`;$('#battleSkillRunes').innerHTML=Object.entries(SKILLS).map(([k,s])=>`<div class="rune">${s.icon} ${s.name}<b>${battle.skills[k]}</b></div>`).join('');goScreen('battle');nextMental();updateBattleUi();$('#mentalAnswer').value='';$('#mentalAnswer').focus();battle.timer=setInterval(tickBattle,1000);
 }
 function mentalQ(){let a=rnd(8,90),b=rnd(2,35),op=['+','−','×'][rnd(0,2)],ans;if(op==='+')ans=a+b;else if(op==='−'){if(b>a)[a,b]=[b,a];ans=a-b}else{a=rnd(2,15);b=rnd(2,12);ans=a*b}return{text:`${a} ${op} ${b}`,ans}}
 function nextMental(){if(!battle)return;battle.question=mentalQ();battle.lastQAt=Date.now();$('#mentalQuestion').textContent=battle.question.text;$('#mentalAnswer').value=''}
@@ -311,17 +343,18 @@ function submitMental(){
  const mateScores=battle.team.slice(1).map(teammateWaveScore);const teamScores=[playerScore,...mateScores];const teamAvg=teamScores.reduce((a,b)=>a+b,0)/teamScores.length;
  battle.teamPowerSamples.push(teamAvg);if(battle.teamPowerSamples.length>30)battle.teamPowerSamples.shift();
  const troopBonus=1+Math.min(.05,(battle.team.length-1)*.005);
- const alg=1+softCap(battle.skills.algebra, .10,95); // 0-10% attack soft ceiling
- const trig=playerCorrect&&elapsed<3?1+softCap(battle.skills.trigonometry,.06,110):1;
- let tactical=1;if(Math.random()<Math.min(.05,softCap(battle.skills.statistics,.05,120))){tactical=1.35;effect('📊 CRITICAL OUTLIER!');playSfx('critical')}
+ const fm=FORMATIONS[battle.formation]?.mods||FORMATIONS.balanced.mods;
+ const alg=1+softCap(battle.skills.algebra*fm.algebra, .10,95); // formation gently modifies mastery effect
+ const trig=playerCorrect&&elapsed<3?1+softCap(battle.skills.trigonometry*fm.trigonometry,.06,110):1;
+ let tactical=1;if(Math.random()<Math.min(.05,softCap(battle.skills.statistics*fm.statistics,.05,120))){tactical=1.35;effect('📊 CRITICAL OUTLIER!');playSfx('critical')}
  const enemyBlock=1-softCap(battle.enemy.skills.geometry,.10,100);
  if(playerCorrect||teamAvg>70){const power=(teamAvg/140)*760*troopBonus*alg*trig*tactical;const dmg=Math.max(1,Math.round(power*enemyBlock));battle.enemyHp=Math.max(0,battle.enemyHp-dmg);if(tactical===1)effect(`⚔ TEAM STRIKE ${dmg}`)}
- else{const enemyWave=95+Math.random()*25;const ourBlock=1-softCap(battle.skills.geometry,.10,100);const enemyDmg=Math.round((enemyWave/140)*620*ourBlock);battle.ourHp=Math.max(0,battle.ourHp-enemyDmg);effect(`🛡 ENEMY COUNTER ${enemyDmg}`);playSfx('shield')}
+ else{const enemyWave=95+Math.random()*25;const ourBlock=1-softCap(battle.skills.geometry*fm.geometry,.10,100);const enemyDmg=Math.round((enemyWave/140)*620*ourBlock);battle.ourHp=Math.max(0,battle.ourHp-enemyDmg);effect(`🛡 ENEMY COUNTER ${enemyDmg}`);playSfx('shield')}
  updateBattleUi();if(battle.enemyHp<=0||battle.ourHp<=0)return endBattle();nextMental();$('#mentalAnswer').focus()
 }
 function tickBattle(){if(!battle||battle.ended)return;battle.seconds--;$('#battleTimer').textContent=battle.seconds;if(battle.seconds<=0)endBattle();else if(Math.random()<.22){const dmg=Math.round(180*(1-battle.skills.geometry/1500));battle.ourHp=Math.max(0,battle.ourHp-dmg);updateBattleUi();if(battle.ourHp<=0)endBattle()}}
 function updateBattleUi(){if(!battle)return;$('#ourHpBar').style.width=(battle.ourHp/battle.maxHp*100)+'%';$('#enemyHpBar').style.width=(battle.enemyHp/battle.maxHp*100)+'%';$('#ourHpText').textContent=`${battle.ourHp} HP`;$('#enemyHpText').textContent=`${battle.enemyHp} HP`;$('#battleAccuracy').textContent=(battle.asked?Math.round(battle.correct/battle.asked*100):100)+'%';$('#battleCombo').textContent=battle.combo;const a=battle.teamPowerSamples?.length?Math.round(battle.teamPowerSamples.reduce((x,y)=>x+y,0)/battle.teamPowerSamples.length):0;$('#battleTeamAvg').textContent=a}
 function effect(t){$('#battleEffects').innerHTML=`<div class="effect-text">${t}</div>`}
-function endBattle(){if(!battle||battle.ended)return;battle.ended=true;clearInterval(battle.timer);const win=battle.enemyHp<battle.ourHp;const delta=win?rnd(18,28):-rnd(12,20);state.clan.rating=Math.max(1000,state.clan.rating+delta);if(win){state.player.crystals+=80;state.clan.influence=Math.min(100,state.clan.influence+2)}save();renderRanking();$('#clanRating').textContent=state.clan.rating;effect(win?'🏆 VICTORY!':'💥 DEFEAT');playSfx(win?'victory':'defeat');setMusicMode('ambient');showModal(`<span class="eyebrow">CLAN CLASH RESULT</span><h3>${win?'🏆 Victory':'🛡 Defeat'}</h3><p>${state.clan.name} vs ${battle.enemy.name}</p><div class="clan-stats"><div><span>Accuracy</span><b>${battle.asked?Math.round(battle.correct/battle.asked*100):0}%</b></div><div><span>Rating</span><b>${delta>0?'+':''}${delta}</b></div><div><span>Crystals</span><b>${win?'+80':'0'}</b></div></div><p>Your Algebra, Geometry, Trigonometry and Statistics mastery did <b>not</b> decrease. Only clan rating changes after a loss.</p><div class="modal-actions"><button class="primary" id="returnMap">Return to Map</button></div>`);$('#returnMap').onclick=()=>{closeModal();battle=null;goScreen('map');init()}}
+function endBattle(){if(!battle||battle.ended)return;battle.ended=true;clearInterval(battle.timer);(battle.selectedIdx||[]).forEach(i=>members[i].status='ready');selectedMembers.clear();renderMembers();renderPresence();const win=battle.enemyHp<battle.ourHp;const delta=win?rnd(18,28):-rnd(12,20);state.clan.rating=Math.max(1000,state.clan.rating+delta);if(win){state.player.crystals+=80;state.clan.influence=Math.min(100,state.clan.influence+2)}save();renderRanking();$('#clanRating').textContent=state.clan.rating;effect(win?'🏆 VICTORY!':'💥 DEFEAT');playSfx(win?'victory':'defeat');setMusicMode('ambient');showModal(`<span class="eyebrow">CLAN CLASH RESULT</span><h3>${win?'🏆 Victory':'🛡 Defeat'}</h3><p>${state.clan.name} vs ${battle.enemy.name} · ${FORMATIONS[battle.formation]?.icon||'⚖'} ${FORMATIONS[battle.formation]?.name||'Balanced'} Formation</p><div class="clan-stats"><div><span>Accuracy</span><b>${battle.asked?Math.round(battle.correct/battle.asked*100):0}%</b></div><div><span>Rating</span><b>${delta>0?'+':''}${delta}</b></div><div><span>Crystals</span><b>${win?'+80':'0'}</b></div></div><p>Your Algebra, Geometry, Trigonometry and Statistics mastery did <b>not</b> decrease. Only clan rating changes after a loss.</p><div class="modal-actions"><button class="primary" id="returnMap">Return to Map</button></div>`);$('#returnMap').onclick=()=>{closeModal();battle=null;goScreen('map');init()}}
 
 init();
